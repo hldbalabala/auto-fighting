@@ -1,7 +1,7 @@
 from paddleocr import PaddleOCR
 import pyautogui
 import time
-
+from img_classification import init_compare, compare_img
 x1, y1 = 0, 0
 x2, y2 = 450, 870
 
@@ -12,8 +12,13 @@ def ocr_detection():
     ocr = PaddleOCR(use_angle_cls=False, lang="ch")
     result = ocr.ocr('screenshot.jpg', cls=True)
     result = result[0]
-    boxes = [line[0] for line in result]
-    txts = [line[1][0] for line in result]
+    try:
+        boxes = [line[0] for line in result]
+        txts = [line[1][0] for line in result]
+        # print(boxes, txts)
+    except:
+        boxes = [[[0, 0], [0, 0]]]
+        txts = [" "]
     # scores = [line[1][1] for line in result]
     return boxes, txts
 
@@ -24,31 +29,31 @@ def screenshot_and_click(boxes, txts, target, dx, dy):
             center_x = (boxes[idx][0][0] + boxes[idx][1][0]) / 2 + dx
             center_y = (boxes[idx][1][1] + boxes[idx][2][1]) / 2 + dy
             pyautogui.click(x=center_x, y=center_y)
-            print("目标",target,"已检测到，并在位置 ({}, {}) 处进行了点击操作。".format(center_x, center_y))
+            print("目标", target, "已检测到，并在位置 ({}, {}) 处进行了点击操作。".format(center_x, center_y))
             break
 
 
 def find_text(boxes, txts, target):
     for idx, txt in enumerate(txts):
         if target in txt:
-            print("have found",target)
+            print("have found", target)
             return 1
     print("not find", target)
     return 0
 
 
-def click(x,y):
+def click(x, y):
     pyautogui.click(x, y)
 
 
 main_state = 0
-car_state = 1
-chest_state = 1
+car_state = 0
+chest_state = 0
 energy_state = 0
 auto_mode = 0
 while 1:
     boxes, txts = ocr_detection()
-    # print(txts)
+    print(txts)
     # avoid broken
     if find_text(boxes, txts, "恭喜获得") == 1:
         click((x1 + x2) / 2, (y1 + y2) / 4)
@@ -66,7 +71,7 @@ while 1:
                 screenshot_and_click(boxes, txts, "领取", 0, 0)
                 time.sleep(3)
                 click((x1 + x2) / 2, (y1 + y2) / 4)
-            elif find_text(boxes, txts, "快速巡逻") == 1 and find_text(boxes, txts, "0/3") == 0:
+            elif find_text(boxes, txts, "快速巡逻") == 1 and find_text(boxes, txts, "0/3") and not find_text(boxes, txts, "0/30")== 0:
                 screenshot_and_click(boxes, txts, "快速巡逻", 0, 0)
                 time.sleep(3)
                 click((x1 + x2) / 2, (y1 + y2) / 4)
@@ -85,7 +90,7 @@ while 1:
         # 领取宝箱
         if car_state == 1 and chest_state == 0:
             while find_text(boxes, txts, "普通宝箱") == 0:
-                click(47,800)
+                click(47, 800)
                 print("点击商城")
                 time.sleep(1)
                 boxes, txts = ocr_detection()
@@ -101,7 +106,7 @@ while 1:
             chest_state = 1
             boxes, txts = ocr_detection()
             screenshot_and_click(boxes, txts, "战斗", 0, 0)
-        #start fighting
+        # start fighting
         if car_state == 1 and chest_state == 1:
             # 确认体力充足
             boxes, txts = ocr_detection()
@@ -110,7 +115,7 @@ while 1:
             boxes, txts = ocr_detection()
             if find_text(boxes, txts, "体力购买") == 1:
                 time.sleep(1)
-                click((x1 + x2) / 2, y2-50)
+                click((x1 + x2) / 2, y2 - 50)
                 time.sleep(1)
                 boxes, txts = ocr_detection()
                 while find_text(boxes, txts, "食堂") == 0:
@@ -170,4 +175,4 @@ while 1:
         else:
             print("error")
 
-    #time.sleep(1)
+    # time.sleep(1)
