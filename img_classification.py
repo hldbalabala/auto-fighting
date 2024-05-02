@@ -4,8 +4,7 @@ import cv2
 import os
 
 
-def resize(img_path):
-    image = cv2.imread(img_path)
+def resize(image):
 
     # 获取图像的高度和宽度
     height, width = image.shape[:2]
@@ -25,15 +24,15 @@ def init_compare():
     data_dir = "data"
     for idx, file_name in enumerate(os.listdir(data_dir)):
         if file_name.endswith('.png'):
-            file_path = os.path.join(data_dir, file_name)
+            file_path = cv2.imread(os.path.join(data_dir, file_name))
             paths.append(file_path)
             name_map[idx] = file_name[:-4]
     return paths, name_map
 
 
-def compare_img(paths, name_map, img_path):
+def compare_img(paths, name_map, img):
     results = []
-    img1 = resize(img_path)
+    img1 = resize(img)
     for path in paths:
         img2 = resize(path)
         results.append(structural_similarity(img1, img2, multichannel=True))
@@ -42,5 +41,6 @@ def compare_img(paths, name_map, img_path):
 
 if __name__ == '__main__':
     paths, name_map = init_compare()
-    results = compare_img(paths, name_map, "data/ice.png")
+    image = cv2.imread("data/ice.png")
+    results = compare_img(paths, name_map, image)
     print(results)
